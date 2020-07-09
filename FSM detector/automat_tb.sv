@@ -5,7 +5,7 @@ module automat_tb;
   wire out;             
 
   
-  automat c0 ( .clk (clk),
+  automat test_automat ( .clk (clk),
                  .data (data),
                  .state_out (state_out),
                  .out (out));
