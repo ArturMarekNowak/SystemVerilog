@@ -1,73 +1,43 @@
-module detector (  input clk,               
-                  input data,              
-                  output reg [1:0] state_out,
-                  output reg out);    
+module FSM (  input logic clk,       //Declaration of logical input - clock signal
+              input logic data,      //Declaration of logical input - data signal - bits passed one by one into sequence detector   
+              input logic reset,     //Declaration of logical input - reset signal
+              output logic out);     //Declaration of logical output - out singal - confirmation of detection of correct sequnce (101)
 
-
-typedef enum {A, B, C, D} automat;
-automat previous_state, next_state;
-
-initial begin
-
-  out <= 0;
-  previous_state = A;
-  state_out = 2'b00;
-  
-end
-  
-
-always @ (posedge clk or negedge clk) begin
+    //Definition of machine's states
+    typedef enum logic [1:0] {NONE_CORRECT, ONE_CORRECT, TWO_CORRECT, THREE_CORRECT} State;
     
-    case (next_state)
-        
-        A: begin
-            state_out = 2'b00;
-            if (data == 1)
-            begin
-                next_state = B;
-                previous_state = A;  
-            end
-          end  
-           
-        B: begin
-            state_out = 2'b01;
-            if (data == 0)
-               begin
-                 next_state=C;
-                 previous_state=B;
-               end
-            
-           end
-           
-        C: begin
-            state_out = 2'b10;
-            if (data == 1)
-               begin
-                 next_state=D;
-                 previous_state=C;
-               end
-            else
-               begin
-                 next_state=A;
-                 previous_state=C; 
-               end
-           end
-           
-        D: begin
-            state_out = 2'b11;
-            out <= ~out;
-            if (data == 1)
-               begin
-                 next_state=B;
-                 previous_state=D;
-               end
-            else
-               begin
-                 next_state=C;
-                 previous_state=D; 
-               end
-           end
-    endcase
-end
+    //Declaration of variables holding current state of machine and next state of machine
+    State current_state, next_state;
+    
 
+    //Modeling sequntional flipflop logic
+    always_ff @(posedge clk or negedge clk) 
+    
+        if(reset) current_state <= NONE_CORRECT;  //If reset active hold default state
+        else current_state <= next_state;         //If reset inactive continue assign to current state the next state
+    
+    //Combinaional logic
+    always_comb 
+        
+        //Moving through states according to machine diagram
+        case (current_state)
+            
+            NONE_CORRECT: if(data) next_state = ONE_CORRECT;
+                          else next_state = NONE_CORRECT;
+               
+            ONE_CORRECT: if(!data) next_state = TWO_CORRECT;
+                         else next_state = ONE_CORRECT;
+               
+            TWO_CORRECT: if(data) next_state = THREE_CORRECT;
+                         else next_state = NONE_CORRECT;
+               
+            THREE_CORRECT: if(data) next_state = ONE_CORRECT; 
+                           else next_state = TWO_CORRECT;
+            
+            default: next_state = NONE_CORRECT;
+        endcase
+
+    //Assign output if all three bits are matching the sequnce we are looking for
+    assign out = (current_state == THREE_CORRECT);
+    
 endmodule
