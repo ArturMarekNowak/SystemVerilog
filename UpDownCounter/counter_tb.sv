@@ -1,53 +1,51 @@
 `timescale 1ns / 1ps
 
-//Testbench declaration
-module counter_tb(counter_if counterif);
+//Testbench declaration with parameters
+module counter_tb #(BIT_WIDTH, CLK_PERIOD)(counter_if counterif);
     
-    //Task enabling reset declaration
-    task reset_on(input integer delay);
-      #delay counterif.rst <= 1;
-    endtask 
+    //Task toggling reset
+    task toggle_reset();
+        counterif.rst = ~counterif.rst;
+    endtask   
     
-    //Task disabling reset declaration
-    task reset_off(input integer delay);
-      #delay counterif.rst <= 0;
-    endtask 
-    
-    //Task enabling counting up declaration
-    task apply_up(input integer delay);
-      #delay  counterif.is_up <= 1;
-    endtask
-    
-    //Task disabling counting up declaration
-    task apply_down(input integer delay);
-      #delay  counterif.is_up <= 0;
-    endtask
-    
-    //Task enabling loading value declaration
-    task apply_load(input integer delay, input integer load_value);
-      #delay  counterif.load <= 1;
-        counterif.in <= load_value;
-    endtask
-    
-    //Task disabling loading value declaration
-    task apply_load_off(input integer delay);
-      #delay  counterif.load <= 0;
-        //counterif.in <= 0;
+    //Task changing cnfiguration of counter 
+    task toggle_load(input integer value, input integer a, input integer b);
+        counterif.load_value_and_if_is_up[0] = a;
+        counterif.load_value_and_if_is_up[1] = b;
+        if(counterif.load_value_and_if_is_up[1])
+            counterif.in = value;
     endtask
     
     
+    //Clock
+    always 
+    begin : clock
+        counterif.clk <= 0; #(CLK_PERIOD/2.0);
+        counterif.clk <= 1; #(CLK_PERIOD/2.0);
+    end : clock
+
     //Simple simulation
-    initial begin
+    initial 
+    begin : simulation
     
-    reset_on(5);
-    reset_off(0);
+    #100 
+    toggle_load(3,1,1);
     
-    apply_load(200,2);
-    apply_up(50);
-    apply_load(125,5);
-    apply_down(50);
-    apply_load_off(250);
+    #100 
+    toggle_load(4,1,0);
+    
+    #100 
+    toggle_load(2,0,1);
+    
+    #100 
+    toggle_load(5,1,0);
+    
+    #100
+    toggle_reset();
+    
+    #100
+    toggle_reset();
     
     #1000 $finish;
-  end
+    end : simulation
 endmodule
