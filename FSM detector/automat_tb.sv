@@ -1,78 +1,56 @@
 `timescale 1ns / 1ps
 
 module FSM_tb;      //Declaration of logical signals
-  logic clk;         
-  logic data; 
-  logic reset;
-  logic out;              
-
+    logic clk;         
+    logic data; 
+    logic reset;
+    logic out;              
+    
+    //Clock parameter
+    parameter CLK_PERIOD = 20;
+    
     //Design Under Test 
     FSM dut( .clk (clk),
                  .data (data),
                  .reset (reset),
                  .out (out));
     
-    //Task generating 101 sequnce
-    task get_101();
-       #5 data <= 1;
-       #5 data <= 0;
-       #5 data <= 1;
-    endtask 
-    
-    //Task generating 111 sequnce
-    task get_111();
-       #5 data <= 1;
-       #5 data <= 1;
-       #5 data <= 1;
-    endtask 
-    
-    //Task generating 001 sequnce
-    task get_001();
-       #5 data <= 0;
-       #5 data <= 0;
-       #5 data <= 1;
-    endtask 
-    
-    //Task generating 010 sequnce
-    task get_010();
-       #5 data <= 0;
-       #5 data <= 1;
-       #5 data <= 0;
-    endtask 
-    
-    //Task enabling reset 
-    task reset_on(input integer delay);
-      #delay reset <= 1;
-    endtask 
-    
-    //Task disabling reset 
-    task reset_off(input integer delay);
-      #delay reset <= 0;
+    //Task which assigns bits to data signal based on vector input
+    task get_bits(input [8:0] bits_sequence);
+        for(int i = 0; i<8; i++)
+        begin
+            #CLK_PERIOD data = bits_sequence[i];
+        end    
+        #(CLK_PERIOD/2) data = 1'b0;            
     endtask
     
-    //Clock period declaration
-    always #5 clk = ~clk;
+    //Task toggling reset 
+    task toggle_reset();
+        reset <= ~reset;
+    endtask 
     
-    //Repeating bits sequnces 
+    //Clock declaration
+    always #(CLK_PERIOD/2) clk = ~clk;
+    
+    //Reapeting bits sequences
     always
-    begin
-        get_010();
-        get_001();
-        get_111();
-        get_101(); 
-    end
+    begin : bits_streams
+        #CLK_PERIOD get_bits(8'b01010101);
+        #CLK_PERIOD get_bits(8'b11000011);
+        #CLK_PERIOD get_bits(8'b10000001);
+    end : bits_streams
     
     //Initial variable values and resets
     initial 
-    begin
+    begin : initvaluse_and_resets
         clk <= 0;
         data <= 0; 
         reset <= 0;
-      
-        reset_on(500);
-        reset_off(250);
+        
+        #400 toggle_reset();
+        #500 toggle_reset();
 
         #1000 $finish;
-    end
+    end : initvaluse_and_resets
             
 endmodule

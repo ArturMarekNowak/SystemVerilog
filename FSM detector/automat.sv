@@ -11,14 +11,18 @@ module FSM (  input logic clk,       //Declaration of logical input - clock sign
     
 
     //Modeling sequntional flipflop logic
-    always_ff @(posedge clk or negedge clk) 
+    always_ff @(posedge clk or negedge reset) 
+    begin : reset_and_states_behaviour
     
-        if(reset) current_state <= NONE_CORRECT;  //If reset active hold default state
-        else current_state <= next_state;         //If reset inactive continue assign to current state the next state
+        if(!reset) current_state <= NONE_CORRECT;  //If reset active hold default state
+        else current_state <= next_state;         //If reset inactive continue assigning to current state the next state
+    
+    end : reset_and_states_behaviour
     
     //Combinaional logic
     always_comb 
-        
+    begin : states    
+    
         //Moving through states according to machine diagram
         case (current_state)
             
@@ -35,7 +39,10 @@ module FSM (  input logic clk,       //Declaration of logical input - clock sign
                            else next_state = TWO_CORRECT;
             
             default: next_state = NONE_CORRECT;
-        endcase
+            
+        endcase       
+     end : states
+        
 
     //Assign output if all three bits are matching the sequnce we are looking for
     assign out = (current_state == THREE_CORRECT);
