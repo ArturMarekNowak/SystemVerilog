@@ -6,12 +6,19 @@ logic pin_in, clk600, clk600_90, clk300;
 logic pin_out, str;
 logic [2:0] ptime;
 
-//Declaration of parameters
+//Declaration of clock parameters
 parameter CLK_600_PERIOD = 1.67;
 parameter CLK_300_PERIOD = 2*CLK_600_PERIOD;
+
+//Declaration of time bit width parameters
 parameter BIT_TIME_WIDTH_1 = 0.4;
 parameter BIT_TIME_WIDTH_2 = 5;
 parameter BIT_TIME_WIDTH_3 = 15;
+
+//Declaration of multiplacation factor of bit width
+parameter BIT_TIME_WIDTH_FACTOR_1 = 1; //Bit width equals 0.418 ns
+parameter BIT_TIME_WIDTH_FACTOR_2 = 10; //Bit width equals 4.175 ns
+parameter BIT_TIME_WIDTH_FACTOR_3 = 20; //Bit width equals 8.350 ns
 
 //Connections
 pin_capt dut(    .pin_in (pin_in),
@@ -56,7 +63,7 @@ pin_capt dut(    .pin_in (pin_in),
     //Task generating random bits on input based on chosen bit width
     task random_bits();
       pin_in = 0;
-      forever #BIT_TIME_WIDTH_1 pin_in = $urandom_range(0, 1);
+      forever #BIT_TIME_WIDTH_FACTOR_1 pin_in = $urandom_range(0, 1);
     endtask 
     
     //Task toggling input with duty cycle 50% based on chosen bit width
@@ -84,17 +91,7 @@ pin_capt dut(    .pin_in (pin_in),
         
         pin_in = 0;
         
-        //random_bits();
-//        #(7.5*CLK_600_PERIOD-0.9) pin_in = 1;
-//        #(3*CLK_600_PERIOD/4) pin_in = 0;
-        
-//        #(2*CLK_600_PERIOD-0.9) pin_in = 1;
-//        #(1*CLK_600_PERIOD/4) pin_in = 0;
-        
-//        #(1*CLK_600_PERIOD-0.9) pin_in = 1;
-//        #(1*CLK_600_PERIOD/4) pin_in = 0;
-        
-        generating_bits(30,20);
+        generating_bits(30,BIT_TIME_WIDTH_FACTOR_2);
         
         
         #1000 $finish;
