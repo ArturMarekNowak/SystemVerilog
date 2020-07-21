@@ -60,10 +60,12 @@ pin_capt dut(    .pin_in (pin_in),
     end : clock_300MHz
      
      
+     
+     
     //Task generating random bits on input based on chosen bit width
     task random_bits();
       pin_in = 0;
-      forever #BIT_TIME_WIDTH_FACTOR_1 pin_in = $urandom_range(0, 1);
+      forever #BIT_TIME_WIDTH_1 pin_in = $urandom_range(0, 1);
     endtask 
     
     //Task toggling input with duty cycle 50% based on chosen bit width
@@ -72,26 +74,43 @@ pin_capt dut(    .pin_in (pin_in),
     endtask 
     
     
+    
+    //Task generating desired number of bits with width which is multiplicity of 0.418ns
     task generating_bits(input integer number_of_bits, input integer bit_length);
     
+        //First bit in first area
         #(6.5*CLK_600_PERIOD+CLK_600_PERIOD/8) pin_in = 1;
         #(1*bit_length*CLK_600_PERIOD/4) pin_in = 0;
         
-        
+        //Further bits in second, third, ..., seventh, zeroth, first, ... areas
         for(int i = 1; i < number_of_bits; i++)
-        begin : loop
+        begin : loop_of_bits
             #(10*CLK_600_PERIOD+2*(CLK_600_PERIOD/8)-1*bit_length*CLK_600_PERIOD/4) pin_in = 1;
             #(1*bit_length*CLK_600_PERIOD/4) pin_in = 0;
-        end
+        end : loop_of_bits
         
     endtask
      
     initial 
     begin : simulation
         
+        //Initial state of pin_in
         pin_in = 0;
         
-        generating_bits(30,BIT_TIME_WIDTH_FACTOR_2);
+        //Generating 15 bits of length 0.418ns
+        generating_bits(15,BIT_TIME_WIDTH_FACTOR_1);
+        
+        //Spacing 
+        #(10*CLK_600_PERIOD) pin_in = 0;
+        
+        //Generating 15 bits of length 4.175ns
+        generating_bits(15,BIT_TIME_WIDTH_FACTOR_2);
+        
+        //Spacing 
+        #(10*CLK_600_PERIOD) pin_in = 0;
+        
+        //Generating 15 bits of length 8.350 ns
+        generating_bits(15,BIT_TIME_WIDTH_FACTOR_3);
         
         
         #1000 $finish;
