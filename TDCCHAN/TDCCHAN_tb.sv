@@ -19,7 +19,7 @@ module TDCCHAN_tb;
 //Declaration of clock parameters
 parameter CLK_600_PERIOD = 1.67;
 parameter CLK_300_PERIOD = 2*CLK_600_PERIOD;
-parameter CLK_40_PERIOD = 25;
+parameter CLK_40_HALF_PERIOD = 12.5; //Declared half period since division of 25 returned 12 instead of 12.5
 
 //Declaration of time bit width parameters
 parameter BIT_TIME_WIDTH_1 = 0.4;
@@ -31,8 +31,8 @@ parameter BIT_TIME_WIDTH_FACTOR_1 = 1; //Bit width equals 0.418 ns
 parameter BIT_TIME_WIDTH_FACTOR_2 = 10; //Bit width equals 4.175 ns
 parameter BIT_TIME_WIDTH_FACTOR_3 = 20; //Bit width equals 8.350 ns
 
-//Declaration of tdc_clk phase shift parameter in seconds
-parameter TDCCLK_PHASE_SHIFT = CLK_40_PERIOD*0.025;
+//Declaration of tdc_clk time shift parameter in seconds
+parameter TDCCLK_TIME_SHIFT = CLK_40_HALF_PERIOD*2*0.025;
 
 logic pin_in, pin_out, clk600, clk600_90, clk300, reset, tdcclk, rstr, rdata, tdc_rdy, tdc_raw_lock;
 logic [3:0] tdc_count;
@@ -98,24 +98,24 @@ TDCCHAN dut (   .pin_in (pin_in),
     begin : clock_tdc
 
         tdcclk = 0;
-        #TDCCLK_PHASE_SHIFT tdcclk = 0;
+        #TDCCLK_TIME_SHIFT tdcclk = 0;
         #(CLK_600_PERIOD/2) tdcclk = 1;
         forever #(CLK_300_PERIOD/2) tdcclk = ~tdcclk;
         
     end : clock_tdc
-    
+   
+
 /////////////////////////BC_TIME///////////////////////// 
 
-    //Generating bc_time incrementing eith frequency of 40MHz      
+    //Generating bc_time incrementing with frequency of 40MHz      
     initial 
     begin : time_bc
         
         bc_time = 0; 
-        forever #(CLK_40_PERIOD/2) bc_time = bc_time + 1;
+        forever #(CLK_40_HALF_PERIOD*2) bc_time = bc_time + 1;
             
     end : time_bc
 
-    
 
 
 
@@ -161,10 +161,6 @@ TDCCHAN dut (   .pin_in (pin_in),
         #125 rstr = 1 ;
     end
         
-
-
-
-
 
 
 
