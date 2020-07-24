@@ -9,6 +9,7 @@ logic [2:0] ptime;
 //Declaration of clock parameters
 parameter CLK_600_PERIOD = 1.67;
 parameter CLK_300_PERIOD = 2*CLK_600_PERIOD;
+parameter CLK_40_HALF_PERIOD = 12.5; //Declared half of period since division of parameter returned 12 not 12.5
 
 //Declaration of time bit width parameters
 parameter BIT_TIME_WIDTH_1 = 0.4;
@@ -18,7 +19,7 @@ parameter BIT_TIME_WIDTH_3 = 15;
 //Declaration of multiplacation factor of bit width
 parameter BIT_TIME_WIDTH_FACTOR_1 = 1; //Bit width equals 0.418 ns
 parameter BIT_TIME_WIDTH_FACTOR_2 = 10; //Bit width equals 4.175 ns
-parameter BIT_TIME_WIDTH_FACTOR_3 = 20; //Bit width equals 8.350 ns
+parameter BIT_TIME_WIDTH_FACTOR_3 = 30; //Bit width equals 8.350 ns
 
 //Connections
 pin_capt dut(    .pin_in (pin_in),
@@ -90,6 +91,18 @@ pin_capt dut(    .pin_in (pin_in),
         end : loop_of_bits
         
     endtask
+    
+    
+    //Task generating 40MHz clock signal on pin_in with shift 
+    task generating_40MHz_clock(input integer shift);
+
+        forever
+        begin : clk_on_pin_in
+            #(CLK_40_HALF_PERIOD+(shift*CLK_600_PERIOD/8)) pin_in = 1;
+            #(CLK_40_HALF_PERIOD+(shift*CLK_600_PERIOD/8)) pin_in = 0;
+        end : clk_on_pin_in
+        
+    endtask
      
     initial 
     begin : simulation
@@ -97,21 +110,24 @@ pin_capt dut(    .pin_in (pin_in),
         //Initial state of pin_in
         pin_in = 0;
         
+        generating_40MHz_clock(0);
+        
+        
         //Generating 15 bits of length 0.418ns
-        generating_bits(15,BIT_TIME_WIDTH_FACTOR_1);
+        //generating_bits(18,BIT_TIME_WIDTH_FACTOR_1);
         
         //Spacing 
-        #(10*CLK_600_PERIOD) pin_in = 0;
+        //#(10*CLK_600_PERIOD) pin_in = 0;
         
         //Generating 15 bits of length 4.175ns
-        generating_bits(15,BIT_TIME_WIDTH_FACTOR_2);
+        //generating_bits(18,BIT_TIME_WIDTH_FACTOR_2);
         
         //Spacing 
-        #(10*CLK_600_PERIOD) pin_in = 0;
+        //#(10*CLK_600_PERIOD) pin_in = 0;
         
         //Generating 15 bits of length 8.350 ns
-        generating_bits(15,BIT_TIME_WIDTH_FACTOR_3);
-        
+        //generating_bits(18,BIT_TIME_WIDTH_FACTOR_3);
+
         
         #1000 $finish;
     end : simulation

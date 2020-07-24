@@ -31,6 +31,9 @@ parameter BIT_TIME_WIDTH_FACTOR_1 = 1; //Bit width equals 0.418 ns
 parameter BIT_TIME_WIDTH_FACTOR_2 = 10; //Bit width equals 4.175 ns
 parameter BIT_TIME_WIDTH_FACTOR_3 = 20; //Bit width equals 8.350 ns
 
+//Declaration of tdc_clk phase shift parameter in seconds
+parameter TDCCLK_PHASE_SHIFT = CLK_40_PERIOD*0.025;
+
 logic pin_in, pin_out, clk600, clk600_90, clk300, reset, tdcclk, rstr, rdata, tdc_rdy, tdc_raw_lock;
 logic [3:0] tdc_count;
 logic [6:0] bc_time;
@@ -84,7 +87,7 @@ TDCCHAN dut (   .pin_in (pin_in),
     
         clk300 = 0;
         #(CLK_600_PERIOD/2) clk300 = 1;
-        forever #(CLK_300_PERIOD/2) clk300 = ~clk300 ;
+        forever #(CLK_300_PERIOD/2) clk300 = ~clk300;
         
     end : clock_300MHz
     
@@ -93,13 +96,24 @@ TDCCHAN dut (   .pin_in (pin_in),
     //Generating clock signal of frequency 300MHz                     
     initial 
     begin : clock_tdc
-    
+
         tdcclk = 0;
-        forever #(CLK_600_PERIOD/2) tdcclk = ~tdcclk ;
+        #TDCCLK_PHASE_SHIFT tdcclk = 0;
+        #(CLK_600_PERIOD/2) tdcclk = 1;
+        forever #(CLK_300_PERIOD/2) tdcclk = ~tdcclk;
         
     end : clock_tdc
     
-    
+/////////////////////////BC_TIME///////////////////////// 
+
+    //Generating bc_time incrementing eith frequency of 40MHz      
+    initial 
+    begin : time_bc
+        
+        bc_time = 0; 
+        forever #(CLK_40_PERIOD/2) bc_time = bc_time + 1;
+            
+    end : time_bc
 
     
 
@@ -109,52 +123,43 @@ TDCCHAN dut (   .pin_in (pin_in),
 
     //Quick tests
     initial 
-        begin
+    begin
         
-            tdc_raw_lock = 0;
-            #500 tdc_raw_lock = 1;
+        tdc_raw_lock = 0;
+        #500 tdc_raw_lock = 1;
             
-        end
-
+    end
     
     initial 
-        begin
+    begin
         
-            bc_time = 0; 
-            forever #25 bc_time = bc_time + 1;
+        tdc_count = 0; 
+        forever #30 tdc_count = tdc_count + 1;
             
-        end
+    end    
         
     initial 
-        begin
+    begin
         
-            tdc_count = 0; 
-            forever #30 tdc_count = tdc_count + 1;
+        rdata = 0 ;
+        #250 rdata = 1 ;
+        #250 rdata = 0 ;
+        #250 rdata = 1 ;
             
-        end    
-        
-    initial 
-        begin
-        
-            rdata = 0 ;
-            #250 rdata = 1 ;
-            #250 rdata = 0 ;
-            #250 rdata = 1 ;
-            
-        end
+    end
     
     initial 
-        begin
+    begin
         
-            rstr = 0 ;
-            #125 rstr = 1 ;
-            #125 rstr = 0 ;
-            #125 rstr = 1 ;
-            #125 rstr = 0 ;
-            #125 rstr = 1 ;
-            #125 rstr = 0 ;
-            #125 rstr = 1 ;
-        end
+        rstr = 0 ;
+        #125 rstr = 1 ;
+        #125 rstr = 0 ;
+        #125 rstr = 1 ;
+        #125 rstr = 0 ;
+        #125 rstr = 1 ;
+        #125 rstr = 0 ;
+        #125 rstr = 1 ;
+    end
         
 
 
@@ -207,7 +212,6 @@ TDCCHAN dut (   .pin_in (pin_in),
         rstr = 0;
         rdata = 0;
         tdc_count = 0;
-        bc_time = 0;
         tdc_raw_lock = 0;
         
         generating_bits_pin_in(10,BIT_TIME_WIDTH_FACTOR_3);
