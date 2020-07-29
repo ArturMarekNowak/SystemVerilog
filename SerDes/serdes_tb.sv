@@ -110,7 +110,26 @@ pin_capt dut(    .pin_in (pin_in),
         #time_value pin_in = 1;
         #time_of_bit pin_in = 0;
     endtask
-        
+    
+    //Time
+    task measure_time();
+        @(ptime);
+        if(ptime == 0)
+            $display("impuls mogl nadejsc w przedziale: %f do %f ns", $realtime - 2*CLK_600_PERIOD, $realtime - 2*CLK_600_PERIOD - (CLK_300_PERIOD/8));   
+        else 
+            $display("impuls mogl nadejsc w przedziale: %f do %f ns", $realtime - 2*CLK_600_PERIOD - abs(abs((ptime-1)%8)-8) * (CLK_300_PERIOD/8), $realtime - 2*CLK_600_PERIOD - abs(abs((ptime)%8)-8) * (CLK_300_PERIOD/8));   
+    endtask 
+    
+    //Calcuation of absoulute value
+    function real abs(input real in); 
+        if(in>= 0.0) return in;
+        else return -in;
+    endfunction
+    
+    always
+    begin : time_measure
+        measure_time();
+    end : time_measure
      
     initial 
     begin : simulation
@@ -126,10 +145,11 @@ pin_capt dut(    .pin_in (pin_in),
         file = $fopen("D:/file.txt", "r"); //Opening file
         while (!$feof(file)) begin 
             $fscanf(file, "%f %f", txt, txt1); //Reading line
-            $display("%f, %f", txt, txt1); //Displaying
+            //$display("%f, %f", txt, txt1); //Displaying
             toggle_pin_in(txt, txt1); //Toggling pin_in base on files lines
         end
         $fclose(file);
+        
         
 //        //Generating continuos clock of 40MHz on pin_in  
 //        generating_40MHz_clock(0);
