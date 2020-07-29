@@ -115,17 +115,19 @@ pin_capt dut(    .pin_in (pin_in),
     initial 
     begin : simulation
         
-        int file, b;
-        real a[1:0], txt, txt1;
+        //Declaration of variables
+        int file;
+        real txt, txt1;
         
         //Initial state of pin_in
         pin_in = 0;
         
-        file = $fopen("D:/file.txt", "r");
-        while (!$feof(file)) begin
-            $fscanf(file, "%f %f", txt, txt1);
-            $display("%f, %f", txt, txt1);
-            toggle_pin_in(txt, txt1);
+        //Reading from file
+        file = $fopen("D:/file.txt", "r"); //Opening file
+        while (!$feof(file)) begin 
+            $fscanf(file, "%f %f", txt, txt1); //Reading line
+            $display("%f, %f", txt, txt1); //Displaying
+            toggle_pin_in(txt, txt1); //Toggling pin_in base on files lines
         end
         $fclose(file);
         
