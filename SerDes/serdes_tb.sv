@@ -17,6 +17,7 @@ parameter BIT_TIME_WIDTH_2 = 5;
 parameter BIT_TIME_WIDTH_3 = 15;
 
 //Declaration of multiplacation factor of bit width
+parameter BIT_TIME_WIDTH_FACTOR_0 = 0.5; //Bit width equals 0.209 ns
 parameter BIT_TIME_WIDTH_FACTOR_1 = 1; //Bit width equals 0.418 ns
 parameter BIT_TIME_WIDTH_FACTOR_2 = 10; //Bit width equals 4.175 ns
 parameter BIT_TIME_WIDTH_FACTOR_3 = 30; //Bit width equals 8.350 ns
@@ -77,7 +78,7 @@ pin_capt dut(    .pin_in (pin_in),
     
     
     //Task generating desired number of bits with width which is multiplicity of 0.418ns
-    task generating_bits(input integer number_of_bits, input integer bit_length);
+    task generating_bits(input integer number_of_bits, input real bit_length);
     
         //First bit in first area
         #(6.5*CLK_600_PERIOD+CLK_600_PERIOD/8) pin_in = 1;
@@ -103,32 +104,50 @@ pin_capt dut(    .pin_in (pin_in),
         end : clk_on_pin_in
         
     endtask
+    
+    //Asynchronous toggle of pin_in
+    task toggle_pin_in(input real time_value, input real time_of_bit);
+        #time_value pin_in = 1;
+        #time_of_bit pin_in = 0;
+    endtask
+        
      
     initial 
     begin : simulation
         
+        int file, b;
+        real a[1:0], txt, txt1;
+        
         //Initial state of pin_in
         pin_in = 0;
         
-        generating_40MHz_clock(0);
+        file = $fopen("D:/file.txt", "r");
+        while (!$feof(file)) begin
+            $fscanf(file, "%f %f", txt, txt1);
+            $display("%f, %f", txt, txt1);
+            toggle_pin_in(txt, txt1);
+        end
+        $fclose(file);
         
-        
-        //Generating 15 bits of length 0.418ns
-        //generating_bits(18,BIT_TIME_WIDTH_FACTOR_1);
-        
-        //Spacing 
-        //#(10*CLK_600_PERIOD) pin_in = 0;
-        
-        //Generating 15 bits of length 4.175ns
-        //generating_bits(18,BIT_TIME_WIDTH_FACTOR_2);
-        
-        //Spacing 
-        //#(10*CLK_600_PERIOD) pin_in = 0;
-        
-        //Generating 15 bits of length 8.350 ns
-        //generating_bits(18,BIT_TIME_WIDTH_FACTOR_3);
+//        //Generating continuos clock of 40MHz on pin_in  
+//        generating_40MHz_clock(0);
+               
+//        //Generating 15 bits of length 0.418ns
+//        generating_bits(18,BIT_TIME_WIDTH_FACTOR_1);
 
+//        //Spacing 
+//        #(10*CLK_600_PERIOD) pin_in = 0;
         
+//        //Generating 15 bits of length 4.175ns
+//        generating_bits(18,BIT_TIME_WIDTH_FACTOR_2);
+        
+//        //Spacing 
+//        #(10*CLK_600_PERIOD) pin_in = 0;
+        
+//        //Generating 15 bits of length 8.350 ns
+//        generating_bits(18,BIT_TIME_WIDTH_FACTOR_3);
+
+         
         #1000 $finish;
     end : simulation
     
